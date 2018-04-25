@@ -37,7 +37,7 @@ void tree::addNode(int data) {
 
 
 void tree::removeNode(int data) {
-	std::shared_ptr<node> tmp = root;	
+	std::shared_ptr<node> tmp = root;
 	std::shared_ptr<node> parent = nullptr;
 
 	auto getParent = [&](shared_ptr<node> p) {
@@ -61,13 +61,13 @@ void tree::removeNode(int data) {
 		while(tmp != nullptr) {
 			if (tmp->data == data) {
 				break;
-			} else if (tmp->data > data) {			
+			} else if (tmp->data > data) {
 				tmp = tmp->left;
 			} else {
 				tmp = tmp->right;
 			}
 		}
-		parent = getParent(tmp);		
+		parent = getParent(tmp);
 	}
 
 	if (tmp == nullptr) {
@@ -75,7 +75,7 @@ void tree::removeNode(int data) {
 		return;
  	}
 
- 	// find the left most node in right subtree 
+ 	// find the left most node in right subtree
  	std::shared_ptr<node> replacement = findLeftMostNodeInRightSubtree(tmp);
 
  	if (replacement == nullptr) {
@@ -135,11 +135,12 @@ int tree::getHeight(std::shared_ptr<node> element) {
 
 void tree::print() {
 	printT(root);
-	
 }
 
+// This whole code is copy paste from the following link
+// https://articles.leetcode.com/how-to-pretty-print-binary-tree/
 void tree::printT(shared_ptr<node> node) {
-	if (node == nullptr) 
+	if (node == nullptr)
 		return;
 
 	int treeHeight = getHeight(root);
@@ -179,51 +180,49 @@ void tree::printT(shared_ptr<node> node) {
 	que.push_front(root);
 	int h = treeHeight;
 	int nodesInCurLevel = 1;
+	int level = 2, indentSpace = 0;
 
 	// There are 3 lengths to consider while printing the binary tree
 	// branch len -- space between the left child and right child
 	// nodeSpaceLen -- space between the left branch's right child and right branch's left child
 	// indent -- space for the first element in a given level
-	int branchLen = pow(2,h) - pow(2, h-1);
-	int nodeSpace = 2 + (pow(2,h));
-	int indent = 2 + branchLen;
+	int branchLen = 2 * (pow(2,h) -1) - ( (3 - level) * pow(2, h-1));
+	int nodeSpace = 2 + (level + 1) * (pow(2,h));
+	int indent = branchLen + (3 - level) + indentSpace;
 
-	auto printBranches = [&]() {
-	    std::deque<std::shared_ptr<__node>>::iterator iter = que.begin();
-	    for (int i =1;i < nodesInCurLevel; i++) {
-	        cout << ((i==0)?setw(indent):setw(nodeSpace)) << "" << ((*iter++) ? "/" : " ");
-            cout << setw(branchLen) << "" << ((*iter++) ? "\\" : " ");
+	auto printBranches = [&](std::deque<std::shared_ptr<__node>>::iterator iter) {
+	    for (int i =0;i < nodesInCurLevel / 2; i++) {
+	        cout << ((i==0)?setw(indent-1):setw(nodeSpace-2)) << "" << ((*iter++) ? "/" : " ");
+            cout << setw(2*branchLen + 2) << "" << ((*iter++) ? "\\" : " ");
 	    }
 
 	    cout << endl;
 	};
 
-	auto printNodes = [&]() {
-	    std::deque<std::shared_ptr<__node>>::iterator iter = que.begin();
+	auto printNodes = [&](std::deque<std::shared_ptr<__node>>::iterator iter) {
 	    for (int i =0;i < nodesInCurLevel; i++) {
-	        cout << ((i==0)?setw(indent):setw(nodeSpace)) << "" << (((*iter) && (*iter)->left) ? setfill('_') : setfill(' '));
-            cout << setw(branchLen) << ((*iter) ? std::to_string((*iter)->data) : "");
+	        cout << ((i==0)?setw(indent):setw(nodeSpace)) << "" << (((*iter) && ((*iter)->left)) ? setfill('_') : setfill(' '));
+            cout << setw(branchLen+2) << ((*iter) ? std::to_string((*iter++)->data) : "");
             cout << (((*iter) && (*iter)->right) ? setfill('_') : setfill(' ')) << setw(branchLen) << "" << setfill(' ');
 	    }
 
 	    cout << endl;
 	};
 
-	auto printLeaves = [&]() {
-	    std::deque<std::shared_ptr<__node>>::iterator iter = que.begin();
+	auto printLeaves = [&](std::deque<std::shared_ptr<__node>>::iterator iter) {
 	    for (int i =0;i < nodesInCurLevel; i++,iter++) {
-		cout << ((i==0)?setw(indent):setw(2)) <<  ((*iter)? std::to_string((*iter)->data) : "");
+			cout << ((i==0)?setw(indent):setw(2*level + 2)) <<  ((*iter)? std::to_string((*iter)->data) : "");
 	    }
 	    cout << endl;
 	};
 
     std::deque<std::shared_ptr<__node>>::iterator iter = que.begin();
 	for (int i = 1; i < h; i++) {
-        printBranches();
-	    branchLen = pow(2,i) - pow(2, i-1);
-	    nodeSpace = 2 + (pow(2,i));
-	    indent = 2 + branchLen;
-        printNodes();
+        printBranches(iter);
+	    branchLen = (branchLen / 2) - 1;
+	    nodeSpace = (nodeSpace / 2) + 1;
+	    indent = branchLen + (3-level) + indentSpace;
+        printNodes(iter);
 
         for (int j=0; j < nodesInCurLevel ; j++) {
             std::shared_ptr<__node> n = *iter++;
@@ -234,11 +233,12 @@ void tree::printT(shared_ptr<node> node) {
                 que.push_back(nullptr);
                 que.push_back(nullptr);
             }
-            nodesInCurLevel += 2;
         }
+		nodesInCurLevel *= 2;
 	}
 
-    printLeaves();
+	printBranches(iter);
+    printLeaves(iter);
 
 /*
 
